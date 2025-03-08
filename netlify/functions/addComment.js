@@ -5,10 +5,11 @@ const client = new faunadb.Client({ secret: process.env.FAUNADB_SECRET });
 
 exports.handler = async (event, context) => {
   try {
+    console.log("addComment invoked");
     const data = JSON.parse(event.body);
-    // data.postId should be the FaunaDB document ID for the post.
+    console.log("Received comment data:", data);
+    // data.postId is the document ID of the post
     const postRef = q.Ref(q.Collection('Posts'), data.postId);
-    // Update the post by appending the new comment to the comments array.
     const result = await client.query(
       q.Update(postRef, {
         data: {
@@ -19,9 +20,12 @@ exports.handler = async (event, context) => {
         }
       })
     );
+    console.log("Comment added:", result);
     return { statusCode: 200, body: JSON.stringify(result) };
   } catch (error) {
+    console.error("Error in addComment:", error);
     return { statusCode: 400, body: JSON.stringify(error) };
   }
 };
+
 
