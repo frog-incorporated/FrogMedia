@@ -7,7 +7,7 @@
   <!-- Google Font for a modern look -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,600&display=swap">
   <style>
-    /* Reset & Base Styles */
+    /* Basic reset and styling */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Poppins', sans-serif;
@@ -26,20 +26,14 @@
       top: 0;
       z-index: 1000;
     }
-    header h1 {
-      font-size: 1.8rem;
-      font-weight: 600;
-    }
+    header h1 { font-size: 1.8rem; font-weight: 600; }
     nav a {
       color: #fff;
       margin-left: 1rem;
       text-decoration: none;
       font-weight: 400;
     }
-    nav a:hover {
-      text-decoration: underline;
-    }
-    /* Identity Button */
+    nav a:hover { text-decoration: underline; }
     #loginButton {
       background: #fff;
       color: #2E7D32;
@@ -49,10 +43,7 @@
       cursor: pointer;
       font-weight: 600;
     }
-    #loginButton:hover {
-      background: #e0e0e0;
-    }
-    /* Container for main content */
+    #loginButton:hover { background: #e0e0e0; }
     .container {
       max-width: 800px;
       margin: 2rem auto;
@@ -80,53 +71,22 @@
     }
     /* Posts Feed */
     #posts { margin-top: 2rem; }
-    .post {
-      margin-bottom: 2rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid #eee;
-    }
-    .post img {
-      max-width: 100%;
-      border-radius: 4px;
-    }
-    .post .caption {
-      margin-top: 0.5rem;
-      font-size: 1rem;
-    }
-    .post time {
-      font-size: 0.8rem;
-      color: #777;
-    }
+    .post { margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid #eee; }
+    .post img { max-width: 100%; border-radius: 4px; }
+    .post .caption { margin-top: 0.5rem; font-size: 1rem; }
+    .post .author { font-size: 0.9rem; color: #555; }
+    .post time { font-size: 0.8rem; color: #777; }
     /* Comment Form */
-    .comment-form {
-      margin-top: 0.75rem;
-      display: flex;
-      gap: 0.5rem;
-    }
+    .comment-form { margin-top: 0.75rem; display: flex; gap: 0.5rem; }
     .comment-form input {
-      flex: 1;
-      padding: 0.5rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      flex: 1; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;
     }
     .comment-form button {
-      padding: 0.5rem 1rem;
-      background: #2E7D32;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
+      padding: 0.5rem 1rem; background: #2E7D32; color: #fff; border: none; border-radius: 4px; cursor: pointer;
     }
-    .comments {
-      margin-top: 1rem;
-      padding-left: 1rem;
-      border-left: 2px solid #eee;
-    }
-    .comments p {
-      font-size: 0.9rem;
-      margin-bottom: 0.5rem;
-    }
-    /* Spacer for white space at bottom */
+    .comments { margin-top: 1rem; padding-left: 1rem; border-left: 2px solid #eee; }
+    .comments p { font-size: 0.9rem; margin-bottom: 0.5rem; }
+    /* Spacer at bottom */
     .spacer { height: 300px; }
   </style>
 </head>
@@ -153,7 +113,7 @@
       </form>
     </div>
     
-    <!-- For You Feed -->
+    <!-- "For You" Feed -->
     <div class="container" id="forYou">
       <h2>For You</h2>
       <div id="posts"></div>
@@ -179,7 +139,7 @@
     let posts = globalThis.posts || [];
     globalThis.posts = posts;
     
-    // Render posts
+    // Render posts function
     function renderPosts() {
       const postsContainer = document.getElementById("posts");
       postsContainer.innerHTML = "";
@@ -191,7 +151,7 @@
         postDiv.innerHTML = `
           <img src="${post.imageUrl}" alt="Post Image">
           <p class="caption">${post.caption}</p>
-          <time>${new Date(post.timestamp).toLocaleString()}</time>
+          <p class="author">Posted by ${post.username} on ${new Date(post.timestamp).toLocaleString()}</p>
           <div class="comments" id="comments-${post.id}"></div>
           <form class="comment-form" onsubmit="addComment(event, '${post.id}')">
             <input type="text" placeholder="Add a comment" required>
@@ -208,10 +168,14 @@
       e.preventDefault();
       const imageUrl = document.getElementById("postImageUrl").value;
       const caption = document.getElementById("postCaption").value;
+      // Get current user's name from Netlify Identity
+      const currentUser = window.netlifyIdentity && window.netlifyIdentity.currentUser();
+      const username = currentUser ? (currentUser.user_metadata.full_name || currentUser.email) : "Anonymous";
       const newPost = {
         id: Date.now().toString(),
         imageUrl,
         caption,
+        username,
         timestamp: Date.now(),
         comments: []
       };
@@ -220,14 +184,16 @@
       renderPosts();
     });
     
-    // Add comment
+    // Add comment for a given post
     function addComment(event, postId) {
       event.preventDefault();
       const input = event.target.querySelector("input");
       const text = input.value;
+      const currentUser = window.netlifyIdentity && window.netlifyIdentity.currentUser();
+      const commenter = currentUser ? (currentUser.user_metadata.full_name || currentUser.email) : "Anonymous";
       const post = posts.find(p => p.id === postId);
       if (post) {
-        post.comments.push({ text, timestamp: Date.now() });
+        post.comments.push({ text, username: commenter, timestamp: Date.now() });
         input.value = "";
         renderComments(postId);
       }
@@ -241,15 +207,16 @@
       if (post && post.comments) {
         post.comments.forEach(comment => {
           const p = document.createElement("p");
-          p.textContent = comment.text;
+          p.innerHTML = `<strong>${comment.username}:</strong> ${comment.text}`;
           commentsDiv.appendChild(p);
         });
       }
     }
     
-    // Initial render of posts
+    // Initial render
     renderPosts();
   </script>
 </body>
 </html>
+
 
