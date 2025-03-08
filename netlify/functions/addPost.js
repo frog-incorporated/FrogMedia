@@ -1,7 +1,10 @@
 const faunadb = require('faunadb'),
       q = faunadb.query;
 
-const client = new faunadb.Client({ secret: process.env.FAUNADB_SECRET });
+const client = new faunadb.Client({ 
+  secret: process.env.FAUNADB_SECRET,
+  headers: { "X-FaunaDB-API-Version": "3" }
+});
 
 exports.handler = async (event, context) => {
   try {
@@ -15,7 +18,7 @@ exports.handler = async (event, context) => {
           caption: data.caption,
           username: data.username,
           timestamp: Date.now(),
-          type: "post",  // Required for the index
+          type: "post",  // dummy field for indexing
           comments: []
         }
       })
@@ -27,5 +30,6 @@ exports.handler = async (event, context) => {
     return { statusCode: 400, body: JSON.stringify(error) };
   }
 };
+
 
 
