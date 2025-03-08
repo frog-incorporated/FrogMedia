@@ -4,129 +4,252 @@
   <meta charset="UTF-8">
   <title>Frog Social</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Google Font for a modern look -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,600&display=swap">
   <style>
-    /* Basic styling for demo purposes */
-    body { font-family: sans-serif; background: #f5f5f5; margin: 0; padding: 0; }
-    header { background: #2E7D32; color: #fff; padding: 1rem; text-align: center; }
-    header button { margin-top: 0.5rem; padding: 0.5rem 1rem; }
-    #posts { max-width: 800px; margin: 2rem auto; }
-    .post { background: #fff; margin: 1rem 0; padding: 1rem; border-radius: 8px; }
-    .post img { max-width: 100%; border-radius: 4px; }
-    .comment { margin-left: 1rem; font-size: 0.9rem; }
-    form { margin-top: 1rem; }
-    input, textarea { width: 100%; padding: 0.5rem; margin-top: 0.5rem; }
-    button { padding: 0.5rem 1rem; margin-top: 0.5rem; }
+    /* Reset & Base Styles */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      line-height: 1.6;
+    }
+    header {
+      background: #2E7D32;
+      color: #fff;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+    nav a {
+      color: #fff;
+      margin-left: 1rem;
+      text-decoration: none;
+      font-weight: 400;
+    }
+    nav a:hover {
+      text-decoration: underline;
+    }
+    /* Identity Button */
+    #loginButton {
+      background: #fff;
+      color: #2E7D32;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    #loginButton:hover {
+      background: #e0e0e0;
+    }
+    /* Container for main content */
+    .container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 1rem;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    /* New Post Form */
+    #newPostForm input, #newPostForm textarea {
+      width: 100%;
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    #newPostForm button {
+      padding: 0.75rem 1.5rem;
+      background: #2E7D32;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    /* Posts Feed */
+    #posts { margin-top: 2rem; }
+    .post {
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #eee;
+    }
+    .post img {
+      max-width: 100%;
+      border-radius: 4px;
+    }
+    .post .caption {
+      margin-top: 0.5rem;
+      font-size: 1rem;
+    }
+    .post time {
+      font-size: 0.8rem;
+      color: #777;
+    }
+    /* Comment Form */
+    .comment-form {
+      margin-top: 0.75rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+    .comment-form input {
+      flex: 1;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .comment-form button {
+      padding: 0.5rem 1rem;
+      background: #2E7D32;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .comments {
+      margin-top: 1rem;
+      padding-left: 1rem;
+      border-left: 2px solid #eee;
+    }
+    .comments p {
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+    /* Spacer for white space at bottom */
+    .spacer { height: 300px; }
   </style>
 </head>
 <body>
   <header>
     <h1>Frog Social</h1>
-    <p>Share your art and comment on posts</p>
-    <!-- Netlify Identity widget will be used for login/signup -->
-    <button id="loginButton">Login / Sign Up</button>
+    <div>
+      <button id="loginButton">Login / Sign Up</button>
+      <nav>
+        <a href="#" class="tab-link" data-target="forYou">For You</a>
+        <a href="#" class="tab-link" data-target="profile">Profile</a>
+      </nav>
+    </div>
   </header>
   
   <main>
-    <!-- Form to create a new post -->
-    <section id="newPost">
-      <h2>Create New Post</h2>
-      <form id="postForm">
-        <input type="text" id="imageUrl" placeholder="Image URL" required>
-        <textarea id="caption" placeholder="Caption"></textarea>
+    <!-- New Post Form -->
+    <div class="container" id="newPost">
+      <h2>Create a New Post</h2>
+      <form id="newPostForm">
+        <input type="url" id="postImageUrl" placeholder="Enter Image URL" required>
+        <textarea id="postCaption" placeholder="Enter Caption"></textarea>
         <button type="submit">Post</button>
       </form>
-    </section>
+    </div>
     
-    <!-- "For You" section: display posts -->
-    <section id="forYou">
+    <!-- For You Feed -->
+    <div class="container" id="forYou">
       <h2>For You</h2>
       <div id="posts"></div>
-    </section>
+    </div>
   </main>
   
-  <!-- Include Netlify Identity widget -->
+  <!-- Spacer -->
+  <div class="spacer"></div>
+  
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <script>
     // Initialize Netlify Identity
     if (window.netlifyIdentity) {
       window.netlifyIdentity.on("init", user => {
-        if (!user) {
-          // You can choose to open the login widget automatically:
-          // window.netlifyIdentity.open();
-        }
+        console.log("Netlify Identity initialized, user:", user);
       });
     }
+    document.getElementById("loginButton").addEventListener("click", () => {
+      window.netlifyIdentity.open();
+    });
     
-    // Fetch and display posts
-    async function fetchPosts() {
-      const res = await fetch('/.netlify/functions/getPosts');
-      const posts = await res.json();
-      // Sort posts descending by timestamp (most recent first)
+    // In-memory storage for demo (for production, use a proper database)
+    let posts = globalThis.posts || [];
+    globalThis.posts = posts;
+    
+    // Render posts
+    function renderPosts() {
+      const postsContainer = document.getElementById("posts");
+      postsContainer.innerHTML = "";
+      // Sort posts: most recent first
       posts.sort((a, b) => b.timestamp - a.timestamp);
-      const postsDiv = document.getElementById('posts');
-      postsDiv.innerHTML = '';
       posts.forEach(post => {
-        const postDiv = document.createElement('div');
-        postDiv.className = 'post';
+        const postDiv = document.createElement("div");
+        postDiv.className = "post";
         postDiv.innerHTML = `
           <img src="${post.imageUrl}" alt="Post Image">
-          <p>${post.caption}</p>
-          <p><small>${new Date(post.timestamp).toLocaleString()}</small></p>
+          <p class="caption">${post.caption}</p>
+          <time>${new Date(post.timestamp).toLocaleString()}</time>
           <div class="comments" id="comments-${post.id}"></div>
-          <form onsubmit="addComment(event, '${post.id}')">
+          <form class="comment-form" onsubmit="addComment(event, '${post.id}')">
             <input type="text" placeholder="Add a comment" required>
             <button type="submit">Comment</button>
           </form>
         `;
-        postsDiv.appendChild(postDiv);
-        fetchComments(post.id);
+        postsContainer.appendChild(postDiv);
+        renderComments(post.id);
       });
     }
     
-    // Submit new post
-    document.getElementById('postForm').addEventListener('submit', async (e) => {
+    // New post submission
+    document.getElementById("newPostForm").addEventListener("submit", (e) => {
       e.preventDefault();
-      const imageUrl = document.getElementById('imageUrl').value;
-      const caption = document.getElementById('caption').value;
-      const postData = { imageUrl, caption };
-      await fetch('/.netlify/functions/addPost', {
-        method: 'POST',
-        body: JSON.stringify(postData)
-      });
-      document.getElementById('postForm').reset();
-      fetchPosts();
+      const imageUrl = document.getElementById("postImageUrl").value;
+      const caption = document.getElementById("postCaption").value;
+      const newPost = {
+        id: Date.now().toString(),
+        imageUrl,
+        caption,
+        timestamp: Date.now(),
+        comments: []
+      };
+      posts.push(newPost);
+      document.getElementById("newPostForm").reset();
+      renderPosts();
     });
     
-    // Add comment for a given post
-    async function addComment(event, postId) {
+    // Add comment
+    function addComment(event, postId) {
       event.preventDefault();
-      const input = event.target.querySelector('input');
+      const input = event.target.querySelector("input");
       const text = input.value;
-      const commentData = { postId, text };
-      await fetch('/.netlify/functions/addComment', {
-        method: 'POST',
-        body: JSON.stringify(commentData)
-      });
-      input.value = '';
-      fetchComments(postId);
+      const post = posts.find(p => p.id === postId);
+      if (post) {
+        post.comments.push({ text, timestamp: Date.now() });
+        input.value = "";
+        renderComments(postId);
+      }
     }
     
-    // Fetch comments for a given post
-    async function fetchComments(postId) {
-      const res = await fetch('/.netlify/functions/getComments?postId=' + postId);
-      const comments = await res.json();
-      const commentsDiv = document.getElementById('comments-' + postId);
-      commentsDiv.innerHTML = '';
-      comments.forEach(comment => {
-        const p = document.createElement('p');
-        p.className = 'comment';
-        p.textContent = comment.text;
-        commentsDiv.appendChild(p);
-      });
+    // Render comments for a post
+    function renderComments(postId) {
+      const post = posts.find(p => p.id === postId);
+      const commentsDiv = document.getElementById("comments-" + postId);
+      commentsDiv.innerHTML = "";
+      if (post && post.comments) {
+        post.comments.forEach(comment => {
+          const p = document.createElement("p");
+          p.textContent = comment.text;
+          commentsDiv.appendChild(p);
+        });
+      }
     }
     
-    // Initial fetch
-    fetchPosts();
+    // Initial render of posts
+    renderPosts();
   </script>
 </body>
 </html>
+
