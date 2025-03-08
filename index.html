@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <title>Frog Social</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Google Fonts for modern look -->
+  <!-- Google Fonts for a modern look -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,600&display=swap">
   <style>
-    /* Basic Reset & Base Styles */
+    /* Basic Reset & Styles */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Poppins', sans-serif;
@@ -102,7 +102,7 @@
     }
     .comments { margin-top: 1rem; padding-left: 1rem; border-left: 2px solid #eee; }
     .comments p { font-size: 0.9rem; margin-bottom: 0.5rem; }
-    /* Spacer at Bottom */
+    /* Spacer */
     .spacer { height: 300px; }
   </style>
 </head>
@@ -158,89 +158,76 @@
     // Initialize Netlify Identity
     if (window.netlifyIdentity) {
       window.netlifyIdentity.on("init", user => {
-        console.log("Identity initialized", user);
+        console.log("Netlify Identity initialized", user);
       });
     }
     document.getElementById("loginButton").addEventListener("click", () => {
       window.netlifyIdentity.open();
     });
     
-    // Function to fetch posts from FaunaDB via Netlify Function
+    // Fetch posts from FaunaDB via Netlify Function
     async function fetchPosts() {
       try {
         const res = await fetch('/.netlify/functions/getPosts');
         const postsData = await res.json();
+        console.log("Fetched posts:", postsData);
         renderPosts(postsData);
       } catch (err) {
         console.error("Error fetching posts:", err);
       }
     }
     
-    // Function to render posts on the page
+    // Render posts to the page
     function renderPosts(postsData) {
       const postsContainer = document.getElementById("posts");
       postsContainer.innerHTML = "";
-      // Posts are assumed to be sorted descending by timestamp in the function
       postsData.forEach(post => {
-        // post.data contains our post data; post.ref['@ref'].id is the document ID
+        const postId = post.ref['@ref'].id;
+        const { imageUrl, caption, username, timestamp, comments } = post.data;
         const postDiv = document.createElement("div");
         postDiv.className = "post";
         postDiv.innerHTML = `
-          <img src="${post.data.imageUrl}" alt="Post Image">
-          <p class="caption">${post.data.caption}</p>
-          <p class="author">Posted by ${post.data.username} on ${new Date(post.data.timestamp).toLocaleString()}</p>
-          <div class="comments" id="comments-${post.ref['@ref'].id}"></div>
-          <form class="comment-form" onsubmit="addComment(event, '${post.ref['@ref'].id}')">
+          <img src="${imageUrl}" alt="Post Image">
+          <p class="caption">${caption}</p>
+          <p class="author">Posted by ${username} on ${new Date(timestamp).toLocaleString()}</p>
+          <div class="comments" id="comments-${postId}"></div>
+          <form class="comment-form" onsubmit="addComment(event, '${postId}')">
             <input type="text" placeholder="Add a comment" required>
             <button type="submit">Comment</button>
           </form>
         `;
         postsContainer.appendChild(postDiv);
-        // Render comments if any
-        renderComments(post.ref['@ref'].id, post.data.comments);
+        renderComments(postId, comments);
       });
     }
     
-    // Function to render comments for a post
+    // Render comments for a post
     function renderComments(postId, comments = []) {
       const commentsDiv = document.getElementById("comments-" + postId);
-      if (commentsDiv) {
-        commentsDiv.innerHTML = "";
-        comments.forEach(comment => {
-          const p = document.createElement("p");
-          p.innerHTML = `<strong>${comment.username}:</strong> ${comment.text}`;
-          commentsDiv.appendChild(p);
-        });
-      }
+      commentsDiv.innerHTML = "";
+      comments.forEach(comment => {
+        const p = document.createElement("p");
+        p.innerHTML = `<strong>${comment.username}:</strong> ${comment.text}`;
+        commentsDiv.appendChild(p);
+      });
     }
     
-    // Function to submit a new post via Netlify Function
+    // Submit a new post via Netlify Function
     async function submitPost(postData) {
       try {
-        await fetch('/.netlify/functions/addPost', {
+        const res = await fetch('/.netlify/functions/addPost', {
           method: 'POST',
           body: JSON.stringify(postData)
         });
+        const result = await res.json();
+        console.log("Post submission result:", result);
         fetchPosts();
       } catch (err) {
         console.error("Error submitting post:", err);
       }
     }
     
-    // Function to submit a comment via Netlify Function
-    async function submitComment(commentData) {
-      try {
-        await fetch('/.netlify/functions/addComment', {
-          method: 'POST',
-          body: JSON.stringify(commentData)
-        });
-        fetchPosts(); // Re-fetch posts to update comments
-      } catch (err) {
-        console.error("Error submitting comment:", err);
-      }
-    }
-    
-    // Handle new post form submission
+    // Handle new post submission
     document.getElementById("newPostForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const imageUrl = document.getElementById("postImageUrl").value;
@@ -252,7 +239,22 @@
       await submitPost(newPost);
     });
     
-    // Handle comment form submission
+    // Submit a new comment via Netlify Function
+    async function submitComment(commentData) {
+      try {
+        const res = await fetch('/.netlify/functions/addComment', {
+          method: 'POST',
+          body: JSON.stringify(commentData)
+        });
+        const result = await res.json();
+        console.log("Comment submission result:", result);
+        fetchPosts();
+      } catch (err) {
+        console.error("Error submitting comment:", err);
+      }
+    }
+    
+    // Handle comment submission for a given post
     async function addComment(e, postId) {
       e.preventDefault();
       const input = e.target.querySelector("input");
@@ -264,11 +266,12 @@
       await submitComment(commentData);
     }
     
-    // Initial fetch of posts
+    // Initial fetch of posts when page loads
     fetchPosts();
   </script>
 </body>
 </html>
+
 
 
 
