@@ -1,12 +1,15 @@
 const faunadb = require('faunadb'),
       q = faunadb.query;
 
-const client = new faunadb.Client({ secret: process.env.FAUNADB_SECRET });
+const client = new faunadb.Client({ 
+  secret: process.env.FAUNADB_SECRET,
+  headers: { "X-FaunaDB-API-Version": "3" }
+});
 
 exports.handler = async (event, context) => {
   try {
     console.log("getPosts invoked");
-    // Use the index 'all_posts_by_date' (set up with term: data.type, value: data.timestamp descending)
+    // Query using your index; ensure your index is named 'all_posts_by_date'
     const result = await client.query(
       q.Paginate(q.Match(q.Index('all_posts_by_date')))
     );
@@ -21,6 +24,7 @@ exports.handler = async (event, context) => {
     return { statusCode: 400, body: JSON.stringify(error) };
   }
 };
+
 
 
 
