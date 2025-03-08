@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <title>Frog Social</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Google Font for a modern look -->
+  <!-- Google Font for modern look -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,600&display=swap">
   <style>
-    /* Basic reset and styling */
+    /* Reset and Base Styles */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Poppins', sans-serif;
@@ -44,6 +44,7 @@
       font-weight: 600;
     }
     #loginButton:hover { background: #e0e0e0; }
+    /* Main container */
     .container {
       max-width: 800px;
       margin: 2rem auto;
@@ -71,28 +72,65 @@
     }
     /* Posts Feed */
     #posts { margin-top: 2rem; }
-    .post { margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid #eee; }
+    .post {
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #eee;
+    }
     .post img { max-width: 100%; border-radius: 4px; }
     .post .caption { margin-top: 0.5rem; font-size: 1rem; }
-    .post .author { font-size: 0.9rem; color: #555; }
+    .post .author { font-size: 0.9rem; color: #555; margin-top: 0.25rem; }
     .post time { font-size: 0.8rem; color: #777; }
     /* Comment Form */
-    .comment-form { margin-top: 0.75rem; display: flex; gap: 0.5rem; }
+    .comment-form {
+      margin-top: 0.75rem;
+      display: flex;
+      gap: 0.5rem;
+    }
     .comment-form input {
-      flex: 1; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;
+      flex: 1;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
     }
     .comment-form button {
-      padding: 0.5rem 1rem; background: #2E7D32; color: #fff; border: none; border-radius: 4px; cursor: pointer;
+      padding: 0.5rem 1rem;
+      background: #2E7D32;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
     }
     .comments { margin-top: 1rem; padding-left: 1rem; border-left: 2px solid #eee; }
     .comments p { font-size: 0.9rem; margin-bottom: 0.5rem; }
-    /* Spacer at bottom */
+    /* Tab Navigation: for switching between pages */
+    .section { display: none; }
+    .section.active { display: block; }
+    /* Fullwidth Gallery for Home Samples */
+    .fullwidth-gallery > * {
+      width: 100%;
+      display: block;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    /* Spacer at Bottom */
     .spacer { height: 300px; }
+    /* Responsive adjustments */
+    @media (max-width: 600px) {
+      header { flex-direction: column; text-align: center; }
+      nav a { margin: 0.5rem; }
+    }
   </style>
 </head>
 <body>
+  <!-- Header -->
   <header>
-    <h1>Frog Social</h1>
+    <div>
+      <!-- Logo Spot (if you want to show your logo image, it's already here) -->
+      <img src="logo.png" alt="Frog Incorporated Logo" style="max-width:60px; vertical-align: middle;">
+      <span style="font-size:1.8rem; font-weight:600; margin-left:0.5rem;">Frog Social</span>
+    </div>
     <div>
       <button id="loginButton">Login / Sign Up</button>
       <nav>
@@ -102,22 +140,34 @@
     </div>
   </header>
   
+  <!-- Main Content (Sections) -->
   <main>
-    <!-- New Post Form -->
-    <div class="container" id="newPost">
-      <h2>Create a New Post</h2>
-      <form id="newPostForm">
-        <input type="url" id="postImageUrl" placeholder="Enter Image URL" required>
-        <textarea id="postCaption" placeholder="Enter Caption"></textarea>
-        <button type="submit">Post</button>
-      </form>
-    </div>
+    <!-- For You Section -->
+    <section id="forYou" class="section active">
+      <!-- New Post Form -->
+      <div class="container" id="newPost">
+        <h2>Create a New Post</h2>
+        <form id="newPostForm">
+          <input type="url" id="postImageUrl" placeholder="Enter Image URL" required>
+          <textarea id="postCaption" placeholder="Enter Caption"></textarea>
+          <button type="submit">Post</button>
+        </form>
+      </div>
+      
+      <!-- Posts Feed -->
+      <div class="container" id="postsContainer">
+        <h2>For You</h2>
+        <div id="posts"></div>
+      </div>
+    </section>
     
-    <!-- "For You" Feed -->
-    <div class="container" id="forYou">
-      <h2>For You</h2>
-      <div id="posts"></div>
-    </div>
+    <!-- Profile Section (Placeholder) -->
+    <section id="profile" class="section">
+      <div class="container">
+        <h2>Your Profile</h2>
+        <p>Profile features coming soon!</p>
+      </div>
+    </section>
   </main>
   
   <!-- Spacer -->
@@ -128,16 +178,27 @@
     // Initialize Netlify Identity
     if (window.netlifyIdentity) {
       window.netlifyIdentity.on("init", user => {
-        console.log("Netlify Identity initialized, user:", user);
+        console.log("Netlify Identity initialized", user);
       });
     }
     document.getElementById("loginButton").addEventListener("click", () => {
       window.netlifyIdentity.open();
     });
     
-    // In-memory storage for demo (for production, use a proper database)
-    let posts = globalThis.posts || [];
-    globalThis.posts = posts;
+    // Basic Tab Navigation
+    document.querySelectorAll('.tab-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = link.getAttribute('data-target');
+        // Remove active class from all sections and add to the target
+        document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
+        document.getElementById(target).classList.add('active');
+      });
+    });
+    
+    // In-memory storage (for demo only)
+    let posts = window.posts || [];
+    window.posts = posts;
     
     // Render posts function
     function renderPosts() {
@@ -163,12 +224,11 @@
       });
     }
     
-    // New post submission
+    // Handle new post submission
     document.getElementById("newPostForm").addEventListener("submit", (e) => {
       e.preventDefault();
       const imageUrl = document.getElementById("postImageUrl").value;
       const caption = document.getElementById("postCaption").value;
-      // Get current user's name from Netlify Identity
       const currentUser = window.netlifyIdentity && window.netlifyIdentity.currentUser();
       const username = currentUser ? (currentUser.user_metadata.full_name || currentUser.email) : "Anonymous";
       const newPost = {
@@ -218,6 +278,7 @@
   </script>
 </body>
 </html>
+
 
 
 
