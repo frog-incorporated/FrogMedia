@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <title>Frog Social</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Google Font for modern look -->
+  <!-- Google Fonts for modern look -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,600&display=swap">
   <style>
-    /* Reset and Base Styles */
+    /* Basic Reset & Base Styles */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Poppins', sans-serif;
@@ -44,7 +44,6 @@
       font-weight: 600;
     }
     #loginButton:hover { background: #e0e0e0; }
-    /* Main container */
     .container {
       max-width: 800px;
       margin: 2rem auto;
@@ -78,9 +77,9 @@
       border-bottom: 1px solid #eee;
     }
     .post img { max-width: 100%; border-radius: 4px; }
-    .post .caption { margin-top: 0.5rem; font-size: 1rem; }
-    .post .author { font-size: 0.9rem; color: #555; margin-top: 0.25rem; }
-    .post time { font-size: 0.8rem; color: #777; }
+    .caption { margin-top: 0.5rem; font-size: 1rem; }
+    .author { font-size: 0.9rem; color: #555; margin-top: 0.25rem; }
+    time { font-size: 0.8rem; color: #777; }
     /* Comment Form */
     .comment-form {
       margin-top: 0.75rem;
@@ -103,31 +102,14 @@
     }
     .comments { margin-top: 1rem; padding-left: 1rem; border-left: 2px solid #eee; }
     .comments p { font-size: 0.9rem; margin-bottom: 0.5rem; }
-    /* Tab Navigation: for switching between pages */
-    .section { display: none; }
-    .section.active { display: block; }
-    /* Fullwidth Gallery for Home Samples */
-    .fullwidth-gallery > * {
-      width: 100%;
-      display: block;
-      margin-bottom: 1rem;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
     /* Spacer at Bottom */
     .spacer { height: 300px; }
-    /* Responsive adjustments */
-    @media (max-width: 600px) {
-      header { flex-direction: column; text-align: center; }
-      nav a { margin: 0.5rem; }
-    }
   </style>
 </head>
 <body>
-  <!-- Header -->
+  <!-- Header with Logo and Navigation -->
   <header>
     <div>
-      <!-- Logo Spot (if you want to show your logo image, it's already here) -->
       <img src="logo.png" alt="Frog Incorporated Logo" style="max-width:60px; vertical-align: middle;">
       <span style="font-size:1.8rem; font-weight:600; margin-left:0.5rem;">Frog Social</span>
     </div>
@@ -140,11 +122,10 @@
     </div>
   </header>
   
-  <!-- Main Content (Sections) -->
+  <!-- Main Content -->
   <main>
     <!-- For You Section -->
     <section id="forYou" class="section active">
-      <!-- New Post Form -->
       <div class="container" id="newPost">
         <h2>Create a New Post</h2>
         <form id="newPostForm">
@@ -154,7 +135,6 @@
         </form>
       </div>
       
-      <!-- Posts Feed -->
       <div class="container" id="postsContainer">
         <h2>For You</h2>
         <div id="posts"></div>
@@ -170,102 +150,63 @@
     </section>
   </main>
   
-  <!-- Spacer -->
   <div class="spacer"></div>
   
+  <!-- Netlify Identity Widget -->
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <script>
     // Initialize Netlify Identity
     if (window.netlifyIdentity) {
       window.netlifyIdentity.on("init", user => {
-        console.log("Netlify Identity initialized", user);
+        console.log("Identity initialized", user);
       });
     }
     document.getElementById("loginButton").addEventListener("click", () => {
       window.netlifyIdentity.open();
     });
     
-    // Basic Tab Navigation
-    document.querySelectorAll('.tab-link').forEach(link => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        const target = link.getAttribute('data-target');
-        // Remove active class from all sections and add to the target
-        document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
-        document.getElementById(target).classList.add('active');
-      });
-    });
+    // Function to fetch posts from FaunaDB via Netlify Function
+    async function fetchPosts() {
+      try {
+        const res = await fetch('/.netlify/functions/getPosts');
+        const postsData = await res.json();
+        renderPosts(postsData);
+      } catch (err) {
+        console.error("Error fetching posts:", err);
+      }
+    }
     
-    // In-memory storage (for demo only)
-    let posts = window.posts || [];
-    window.posts = posts;
-    
-    // Render posts function
-    function renderPosts() {
+    // Function to render posts on the page
+    function renderPosts(postsData) {
       const postsContainer = document.getElementById("posts");
       postsContainer.innerHTML = "";
-      // Sort posts: most recent first
-      posts.sort((a, b) => b.timestamp - a.timestamp);
-      posts.forEach(post => {
+      // Posts are assumed to be sorted descending by timestamp in the function
+      postsData.forEach(post => {
+        // post.data contains our post data; post.ref['@ref'].id is the document ID
         const postDiv = document.createElement("div");
         postDiv.className = "post";
         postDiv.innerHTML = `
-          <img src="${post.imageUrl}" alt="Post Image">
-          <p class="caption">${post.caption}</p>
-          <p class="author">Posted by ${post.username} on ${new Date(post.timestamp).toLocaleString()}</p>
-          <div class="comments" id="comments-${post.id}"></div>
-          <form class="comment-form" onsubmit="addComment(event, '${post.id}')">
+          <img src="${post.data.imageUrl}" alt="Post Image">
+          <p class="caption">${post.data.caption}</p>
+          <p class="author">Posted by ${post.data.username} on ${new Date(post.data.timestamp).toLocaleString()}</p>
+          <div class="comments" id="comments-${post.ref['@ref'].id}"></div>
+          <form class="comment-form" onsubmit="addComment(event, '${post.ref['@ref'].id}')">
             <input type="text" placeholder="Add a comment" required>
             <button type="submit">Comment</button>
           </form>
         `;
         postsContainer.appendChild(postDiv);
-        renderComments(post.id);
+        // Render comments if any
+        renderComments(post.ref['@ref'].id, post.data.comments);
       });
     }
     
-    // Handle new post submission
-    document.getElementById("newPostForm").addEventListener("submit", (e) => {
-      e.preventDefault();
-      const imageUrl = document.getElementById("postImageUrl").value;
-      const caption = document.getElementById("postCaption").value;
-      const currentUser = window.netlifyIdentity && window.netlifyIdentity.currentUser();
-      const username = currentUser ? (currentUser.user_metadata.full_name || currentUser.email) : "Anonymous";
-      const newPost = {
-        id: Date.now().toString(),
-        imageUrl,
-        caption,
-        username,
-        timestamp: Date.now(),
-        comments: []
-      };
-      posts.push(newPost);
-      document.getElementById("newPostForm").reset();
-      renderPosts();
-    });
-    
-    // Add comment for a given post
-    function addComment(event, postId) {
-      event.preventDefault();
-      const input = event.target.querySelector("input");
-      const text = input.value;
-      const currentUser = window.netlifyIdentity && window.netlifyIdentity.currentUser();
-      const commenter = currentUser ? (currentUser.user_metadata.full_name || currentUser.email) : "Anonymous";
-      const post = posts.find(p => p.id === postId);
-      if (post) {
-        post.comments.push({ text, username: commenter, timestamp: Date.now() });
-        input.value = "";
-        renderComments(postId);
-      }
-    }
-    
-    // Render comments for a post
-    function renderComments(postId) {
-      const post = posts.find(p => p.id === postId);
+    // Function to render comments for a post
+    function renderComments(postId, comments = []) {
       const commentsDiv = document.getElementById("comments-" + postId);
-      commentsDiv.innerHTML = "";
-      if (post && post.comments) {
-        post.comments.forEach(comment => {
+      if (commentsDiv) {
+        commentsDiv.innerHTML = "";
+        comments.forEach(comment => {
           const p = document.createElement("p");
           p.innerHTML = `<strong>${comment.username}:</strong> ${comment.text}`;
           commentsDiv.appendChild(p);
@@ -273,11 +214,62 @@
       }
     }
     
-    // Initial render
-    renderPosts();
+    // Function to submit a new post via Netlify Function
+    async function submitPost(postData) {
+      try {
+        await fetch('/.netlify/functions/addPost', {
+          method: 'POST',
+          body: JSON.stringify(postData)
+        });
+        fetchPosts();
+      } catch (err) {
+        console.error("Error submitting post:", err);
+      }
+    }
+    
+    // Function to submit a comment via Netlify Function
+    async function submitComment(commentData) {
+      try {
+        await fetch('/.netlify/functions/addComment', {
+          method: 'POST',
+          body: JSON.stringify(commentData)
+        });
+        fetchPosts(); // Re-fetch posts to update comments
+      } catch (err) {
+        console.error("Error submitting comment:", err);
+      }
+    }
+    
+    // Handle new post form submission
+    document.getElementById("newPostForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const imageUrl = document.getElementById("postImageUrl").value;
+      const caption = document.getElementById("postCaption").value;
+      const currentUser = window.netlifyIdentity && window.netlifyIdentity.currentUser();
+      const username = currentUser ? (currentUser.user_metadata.full_name || currentUser.email) : "Anonymous";
+      const newPost = { imageUrl, caption, username };
+      document.getElementById("newPostForm").reset();
+      await submitPost(newPost);
+    });
+    
+    // Handle comment form submission
+    async function addComment(e, postId) {
+      e.preventDefault();
+      const input = e.target.querySelector("input");
+      const text = input.value;
+      const currentUser = window.netlifyIdentity && window.netlifyIdentity.currentUser();
+      const username = currentUser ? (currentUser.user_metadata.full_name || currentUser.email) : "Anonymous";
+      const commentData = { postId, text, username };
+      input.value = "";
+      await submitComment(commentData);
+    }
+    
+    // Initial fetch of posts
+    fetchPosts();
   </script>
 </body>
 </html>
+
 
 
 
