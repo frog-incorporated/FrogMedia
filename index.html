@@ -1,280 +1,241 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Frog Social</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Google Fonts for a modern look -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,600&display=swap">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wall Tap Translator</title>
   <style>
-    /* Basic Reset & Styles */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: #f5f5f5;
-      color: #333;
-      line-height: 1.6;
-    }
-    header {
-      background: #2E7D32;
-      color: #fff;
-      padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
-    header h1 { font-size: 1.8rem; font-weight: 600; }
-    nav a {
-      color: #fff;
-      margin-left: 1rem;
-      text-decoration: none;
-      font-weight: 400;
-    }
-    nav a:hover { text-decoration: underline; }
-    #loginButton {
-      background: #fff;
-      color: #2E7D32;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-    #loginButton:hover { background: #e0e0e0; }
-    .container {
-      max-width: 800px;
-      margin: 2rem auto;
-      padding: 1rem;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    /* New Post Form */
-    #newPostForm input, #newPostForm textarea {
-      width: 100%;
-      padding: 0.75rem;
-      margin: 0.5rem 0;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    #newPostForm button {
-      padding: 0.75rem 1.5rem;
-      background: #2E7D32;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-    /* Posts Feed */
-    #posts { margin-top: 2rem; }
-    .post {
-      margin-bottom: 2rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid #eee;
-    }
-    .post img { max-width: 100%; border-radius: 4px; }
-    .caption { margin-top: 0.5rem; font-size: 1rem; }
-    .author { font-size: 0.9rem; color: #555; margin-top: 0.25rem; }
-    time { font-size: 0.8rem; color: #777; }
-    /* Comment Form */
-    .comment-form {
-      margin-top: 0.75rem;
-      display: flex;
-      gap: 0.5rem;
-    }
-    .comment-form input {
-      flex: 1;
-      padding: 0.5rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    .comment-form button {
-      padding: 0.5rem 1rem;
-      background: #2E7D32;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .comments { margin-top: 1rem; padding-left: 1rem; border-left: 2px solid #eee; }
-    .comments p { font-size: 0.9rem; margin-bottom: 0.5rem; }
-    /* Spacer */
-    .spacer { height: 300px; }
+    body { font-family: sans-serif; text-align: center; margin: 20px; }
+    button { padding: 10px 20px; font-size: 16px; margin: 10px; }
+    #transcript { border: 1px solid #ccc; padding: 10px; height: 200px; width: 80%; margin: auto; overflow-y: auto; white-space: pre-wrap; }
   </style>
 </head>
 <body>
-  <!-- Header with Logo and Navigation -->
-  <header>
-    <div>
-      <img src="logo.png" alt="Frog Incorporated Logo" style="max-width:60px; vertical-align: middle;">
-      <span style="font-size:1.8rem; font-weight:600; margin-left:0.5rem;">Frog Social</span>
-    </div>
-    <div>
-      <button id="loginButton">Login / Sign Up</button>
-      <nav>
-        <a href="#" class="tab-link" data-target="forYou">For You</a>
-        <a href="#" class="tab-link" data-target="profile">Profile</a>
-      </nav>
-    </div>
-  </header>
-  
-  <!-- Main Content -->
-  <main>
-    <!-- For You Section -->
-    <section id="forYou" class="section active">
-      <div class="container" id="newPost">
-        <h2>Create a New Post</h2>
-        <form id="newPostForm">
-          <input type="url" id="postImageUrl" placeholder="Enter Image URL" required>
-          <textarea id="postCaption" placeholder="Enter Caption"></textarea>
-          <button type="submit">Post</button>
-        </form>
-      </div>
-      
-      <div class="container" id="postsContainer">
-        <h2>For You</h2>
-        <div id="posts"></div>
-      </div>
-    </section>
-    
-    <!-- Profile Section (Placeholder) -->
-    <section id="profile" class="section">
-      <div class="container">
-        <h2>Your Profile</h2>
-        <p>Profile features coming soon!</p>
-      </div>
-    </section>
-  </main>
-  
-  <div class="spacer"></div>
-  
-  <!-- Netlify Identity Widget -->
-  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-  <script>
-    // Initialize Netlify Identity
-    if (window.netlifyIdentity) {
-      window.netlifyIdentity.on("init", user => {
-        console.log("Netlify Identity initialized", user);
-      });
+  <h1>Wall Tap Translator</h1>
+  <button id="startButton">Start Listening</button>
+  <button id="stopButton" disabled>Stop Listening</button>
+  <div id="transcript" placeholder="Transcription appears here..."></div>  <script>
+    // Mapping (row,column) -> character
+    const codeMap = {
+      "1,1":"A","1,2":"B","1,3":"C","1,4":"D","1,5":"E",
+      "2,1":"F","2,2":"G","2,3":"H","2,4":"I","2,5":"J",
+      "3,1":"K","3,2":"L","3,3":"M","3,4":"N","3,5":"O",
+      "4,1":"P","4,2":"Q","4,3":"R","4,4":"S","4,5":"T",
+      "5,1":"U","5,2":"V","5,3":"W","5,4":"X","5,5":"Y",
+      // special
+      "5,6":" ", // SPACE (use 6 taps for column as special code)
+      "5,7":".", // STOP
+      "5,8":"?",
+      "5,9":","
+    };
+
+    let audioCtx, analyser, source, dataArray;
+    let listening = false;
+    let peaks = [];
+    let lastPeak = 0;
+
+    // thresholds (in ms)
+    const minPeakGap = 100;
+    const withinGroupMax = 600;
+    const betweenLetterMin = 800;
+    const silenceTrim = 2000;
+    const amplitudeThreshold = 0.2;
+
+    const transcriptEl = document.getElementById('transcript');
+    document.getElementById('startButton').onclick = start;
+    document.getElementById('stopButton').onclick = stop;
+
+    function start() {
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          analyser = audioCtx.createAnalyser();
+          source = audioCtx.createMediaStreamSource(stream);
+          source.connect(analyser);
+          dataArray = new Uint8Array(analyser.fftSize);
+          listening = true;
+          peaks = [];
+          transcriptEl.textContent = '';
+          document.getElementById('startButton').disabled = true;
+          document.getElementById('stopButton').disabled = false;
+          detect();
+        })
+        .catch(err => alert('Error accessing microphone: ' + err));
     }
-    document.getElementById("loginButton").addEventListener("click", () => {
-      window.netlifyIdentity.open();
-    });
-    
-    // Fetch posts from FaunaDB via Netlify Function
-    async function fetchPosts() {
-      try {
-        const res = await fetch('/.netlify/functions/getPosts');
-        const postsData = await res.json();
-        console.log("Fetched posts:", postsData);
-        renderPosts(postsData);
-      } catch (err) {
-        console.error("Error fetching posts:", err);
+
+    function stop() {
+      listening = false;
+      document.getElementById('startButton').disabled = false;
+      document.getElementById('stopButton').disabled = true;
+      decode();
+    }
+
+    function detect() {
+      if (!listening) return;
+      analyser.getByteTimeDomainData(dataArray);
+      let max = 0;
+      for (let v of dataArray) {
+        max = Math.max(max, Math.abs(v - 128) / 128);
       }
-    }
-    
-    // Render posts to the page
-    function renderPosts(postsData) {
-      const postsContainer = document.getElementById("posts");
-      postsContainer.innerHTML = "";
-      postsData.forEach(post => {
-        const postId = post.ref['@ref'].id;
-        const { imageUrl, caption, username, timestamp, comments } = post.data;
-        const postDiv = document.createElement("div");
-        postDiv.className = "post";
-        postDiv.innerHTML = `
-          <img src="${imageUrl}" alt="Post Image">
-          <p class="caption">${caption}</p>
-          <p class="author">Posted by ${username} on ${new Date(timestamp).toLocaleString()}</p>
-          <div class="comments" id="comments-${postId}"></div>
-          <form class="comment-form" onsubmit="addComment(event, '${postId}')">
-            <input type="text" placeholder="Add a comment" required>
-            <button type="submit">Comment</button>
-          </form>
-        `;
-        postsContainer.appendChild(postDiv);
-        renderComments(postId, comments);
-      });
-    }
-    
-    // Render comments for a post
-    function renderComments(postId, comments = []) {
-      const commentsDiv = document.getElementById("comments-" + postId);
-      commentsDiv.innerHTML = "";
-      comments.forEach(comment => {
-        const p = document.createElement("p");
-        p.innerHTML = `<strong>${comment.username}:</strong> ${comment.text}`;
-        commentsDiv.appendChild(p);
-      });
-    }
-    
-    // Submit a new post via Netlify Function
-    async function submitPost(postData) {
-      try {
-        const res = await fetch('/.netlify/functions/addPost', {
-          method: 'POST',
-          body: JSON.stringify(postData)
-        });
-        const result = await res.json();
-        console.log("Post submission result:", result);
-        fetchPosts();
-      } catch (err) {
-        console.error("Error submitting post:", err);
+      const now = Date.now();
+      if (max > amplitudeThreshold && (now - lastPeak) > minPeakGap) {
+        peaks.push(now);
+        lastPeak = now;
       }
+      requestAnimationFrame(detect);
     }
-    
-    // Handle new post submission
-    document.getElementById("newPostForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const imageUrl = document.getElementById("postImageUrl").value;
-      const caption = document.getElementById("postCaption").value;
-      const currentUser = window.netlifyIdentity && window.netlifyIdentity.currentUser();
-      const username = currentUser ? (currentUser.user_metadata.full_name || currentUser.email) : "Anonymous";
-      const newPost = { imageUrl, caption, username };
-      document.getElementById("newPostForm").reset();
-      await submitPost(newPost);
-    });
-    
-    // Submit a new comment via Netlify Function
-    async function submitComment(commentData) {
-      try {
-        const res = await fetch('/.netlify/functions/addComment', {
-          method: 'POST',
-          body: JSON.stringify(commentData)
-        });
-        const result = await res.json();
-        console.log("Comment submission result:", result);
-        fetchPosts();
-      } catch (err) {
-        console.error("Error submitting comment:", err);
+
+    function decode() {
+      if (!peaks.length) return;
+      // trim leading/trailing silence blocks
+      let times = peaks.filter(t => t - peaks[0] < silenceTrim);
+      // split into letters
+      const letters = [];
+      let current = [ times[0] ];
+      for (let i = 1; i < times.length; i++) {
+        const gap = times[i] - times[i - 1];
+        if (gap < withinGroupMax) {
+          current.push(times[i]);
+        } else if (gap < betweenLetterMin) {
+          // switch to next sub-group
+          current = [ times[i] ];
+        } else {
+          // end of letter
+          letters.push(current);
+          current = [ times[i] ];
+        }
       }
+      letters.push(current);
+
+      // group into pairs (row taps, then column taps)
+      let output = '';
+      for (let i = 0; i < letters.length; i += 2) {
+        const rowCount = letters[i] ? letters[i].length : 0;
+        const colCount = letters[i + 1] ? letters[i + 1].length : 0;
+        const key = rowCount + ',' + colCount;
+        output += codeMap[key] || '#';
+      }
+
+      transcriptEl.textContent = output;
     }
-    
-    // Handle comment submission for a given post
-    async function addComment(e, postId) {
-      e.preventDefault();
-      const input = e.target.querySelector("input");
-      const text = input.value;
-      const currentUser = window.netlifyIdentity && window.netlifyIdentity.currentUser();
-      const username = currentUser ? (currentUser.user_metadata.full_name || currentUser.email) : "Anonymous";
-      const commentData = { postId, text, username };
-      input.value = "";
-      await submitComment(commentData);
+  </script></body>
+</html><!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wall Tap Translator</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin: 20px; }
+    button { padding: 10px 20px; font-size: 16px; margin: 10px; }
+    #transcript { border: 1px solid #ccc; padding: 10px; height: 200px; width: 80%; margin: auto; overflow-y: auto; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Wall Tap Translator</h1>
+  <button id="startButton">Start Listening</button>
+  <button id="stopButton" disabled>Stop Listening</button>
+  <div id="transcript" placeholder="Transcription appears here..."></div>  <script>
+    // Mapping (row,column) -> character
+    const codeMap = {
+      "1,1":"A","1,2":"B","1,3":"C","1,4":"D","1,5":"E",
+      "2,1":"F","2,2":"G","2,3":"H","2,4":"I","2,5":"J",
+      "3,1":"K","3,2":"L","3,3":"M","3,4":"N","3,5":"O",
+      "4,1":"P","4,2":"Q","4,3":"R","4,4":"S","4,5":"T",
+      "5,1":"U","5,2":"V","5,3":"W","5,4":"X","5,5":"Y",
+      // special
+      "5,6":" ", // SPACE (use 6 taps for column as special code)
+      "5,7":".", // STOP
+      "5,8":"?",
+      "5,9":","
+    };
+
+    let audioCtx, analyser, source, dataArray;
+    let listening = false;
+    let peaks = [];
+    let lastPeak = 0;
+
+    // thresholds (in ms)
+    const minPeakGap = 100;
+    const withinGroupMax = 600;
+    const betweenLetterMin = 800;
+    const silenceTrim = 2000;
+    const amplitudeThreshold = 0.2;
+
+    const transcriptEl = document.getElementById('transcript');
+    document.getElementById('startButton').onclick = start;
+    document.getElementById('stopButton').onclick = stop;
+
+    function start() {
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          analyser = audioCtx.createAnalyser();
+          source = audioCtx.createMediaStreamSource(stream);
+          source.connect(analyser);
+          dataArray = new Uint8Array(analyser.fftSize);
+          listening = true;
+          peaks = [];
+          transcriptEl.textContent = '';
+          document.getElementById('startButton').disabled = true;
+          document.getElementById('stopButton').disabled = false;
+          detect();
+        })
+        .catch(err => alert('Error accessing microphone: ' + err));
     }
-    
-    // Initial fetch of posts when page loads
-    fetchPosts();
-  </script>
-</body>
+
+    function stop() {
+      listening = false;
+      document.getElementById('startButton').disabled = false;
+      document.getElementById('stopButton').disabled = true;
+      decode();
+    }
+
+    function detect() {
+      if (!listening) return;
+      analyser.getByteTimeDomainData(dataArray);
+      let max = 0;
+      for (let v of dataArray) {
+        max = Math.max(max, Math.abs(v - 128) / 128);
+      }
+      const now = Date.now();
+      if (max > amplitudeThreshold && (now - lastPeak) > minPeakGap) {
+        peaks.push(now);
+        lastPeak = now;
+      }
+      requestAnimationFrame(detect);
+    }
+
+    function decode() {
+      if (!peaks.length) return;
+      // trim leading/trailing silence blocks
+      let times = peaks.filter(t => t - peaks[0] < silenceTrim);
+      // split into letters
+      const letters = [];
+      let current = [ times[0] ];
+      for (let i = 1; i < times.length; i++) {
+        const gap = times[i] - times[i - 1];
+        if (gap < withinGroupMax) {
+          current.push(times[i]);
+        } else if (gap < betweenLetterMin) {
+          // switch to next sub-group
+          current = [ times[i] ];
+        } else {
+          // end of letter
+          letters.push(current);
+          current = [ times[i] ];
+        }
+      }
+      letters.push(current);
+
+      // group into pairs (row taps, then column taps)
+      let output = '';
+      for (let i = 0; i < letters.length; i += 2) {
+        const rowCount = letters[i] ? letters[i].length : 0;
+        const colCount = letters[i + 1] ? letters[i + 1].length : 0;
+        const key = rowCount + ',' + colCount;
+        output += codeMap[key] || '#';
+      }
+
+      transcriptEl.textContent = output;
+    }
+  </script></body>
 </html>
-
-
-
-
-
-
-
