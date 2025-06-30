@@ -14,31 +14,24 @@
   <button id="startButton">Start Listening</button>
   <button id="stopButton" disabled>Stop Listening</button>
   <div id="transcript" placeholder="Transcription appears here..."></div>  <script>
-    // Mapping (row,column) -> character
+    // Tap-code mapping (row,column)
     const codeMap = {
       "1,1":"A","1,2":"B","1,3":"C","1,4":"D","1,5":"E",
       "2,1":"F","2,2":"G","2,3":"H","2,4":"I","2,5":"J",
       "3,1":"K","3,2":"L","3,3":"M","3,4":"N","3,5":"O",
       "4,1":"P","4,2":"Q","4,3":"R","4,4":"S","4,5":"T",
       "5,1":"U","5,2":"V","5,3":"W","5,4":"X","5,5":"Y",
-      // special
-      "5,6":" ", // SPACE (use 6 taps for column as special code)
-      "5,7":".", // STOP
-      "5,8":"?",
-      "5,9":","
+      // You can define special codes or use pauses for SPACE/STOP
     };
 
     let audioCtx, analyser, source, dataArray;
     let listening = false;
     let peaks = [];
-    let lastPeak = 0;
 
-    // thresholds (in ms)
-    const minPeakGap = 100;
-    const withinGroupMax = 600;
-    const betweenLetterMin = 800;
-    const silenceTrim = 2000;
-    const amplitudeThreshold = 0.2;
+    // Parameters (tweak these if needed)
+    const amplitudeThreshold = 0.1;    // sensitivity threshold (0–1)
+    const letterGap = 600;             // ms pause between letters
+    const minPeakGap = 50;             // ms debouncing between taps
 
     const transcriptEl = document.getElementById('transcript');
     document.getElementById('startButton').onclick = start;
@@ -67,173 +60,59 @@
       document.getElementById('startButton').disabled = false;
       document.getElementById('stopButton').disabled = true;
       decode();
+      if (audioCtx) audioCtx.close();
     }
 
     function detect() {
       if (!listening) return;
       analyser.getByteTimeDomainData(dataArray);
-      let max = 0;
+      let maxAmp = 0;
       for (let v of dataArray) {
-        max = Math.max(max, Math.abs(v - 128) / 128);
+        maxAmp = Math.max(maxAmp, Math.abs(v - 128) / 128);
       }
       const now = Date.now();
-      if (max > amplitudeThreshold && (now - lastPeak) > minPeakGap) {
+      if (maxAmp > amplitudeThreshold && (!peaks.length || now - peaks[peaks.length-1] > minPeakGap)) {
         peaks.push(now);
-        lastPeak = now;
       }
       requestAnimationFrame(detect);
     }
 
     function decode() {
       if (!peaks.length) return;
-      // trim leading/trailing silence blocks
-      let times = peaks.filter(t => t - peaks[0] < silenceTrim);
-      // split into letters
-      const letters = [];
-      let current = [ times[0] ];
+      const times = peaks;
+      // Partition peaks into letter groups
+      const letterGroups = [];
+      let current = [times[0]];
       for (let i = 1; i < times.length; i++) {
-        const gap = times[i] - times[i - 1];
-        if (gap < withinGroupMax) {
-          current.push(times[i]);
-        } else if (gap < betweenLetterMin) {
-          // switch to next sub-group
-          current = [ times[i] ];
+        const gap = times[i] - times[i-1];
+        if (gap > letterGap) {
+          letterGroups.push(current);
+          current = [times[i]];
         } else {
-          // end of letter
-          letters.push(current);
-          current = [ times[i] ];
+          current.push(times[i]);
         }
       }
-      letters.push(current);
+      letterGroups.push(current);
 
-      // group into pairs (row taps, then column taps)
+      // Decode each group by splitting at largest internal gap
       let output = '';
-      for (let i = 0; i < letters.length; i += 2) {
-        const rowCount = letters[i] ? letters[i].length : 0;
-        const colCount = letters[i + 1] ? letters[i + 1].length : 0;
-        const key = rowCount + ',' + colCount;
-        output += codeMap[key] || '#';
-      }
-
-      transcriptEl.textContent = output;
-    }
-  </script></body>
-</html><!DOCTYPE html><html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Wall Tap Translator</title>
-  <style>
-    body { font-family: sans-serif; text-align: center; margin: 20px; }
-    button { padding: 10px 20px; font-size: 16px; margin: 10px; }
-    #transcript { border: 1px solid #ccc; padding: 10px; height: 200px; width: 80%; margin: auto; overflow-y: auto; white-space: pre-wrap; }
-  </style>
-</head>
-<body>
-  <h1>Wall Tap Translator</h1>
-  <button id="startButton">Start Listening</button>
-  <button id="stopButton" disabled>Stop Listening</button>
-  <div id="transcript" placeholder="Transcription appears here..."></div>  <script>
-    // Mapping (row,column) -> character
-    const codeMap = {
-      "1,1":"A","1,2":"B","1,3":"C","1,4":"D","1,5":"E",
-      "2,1":"F","2,2":"G","2,3":"H","2,4":"I","2,5":"J",
-      "3,1":"K","3,2":"L","3,3":"M","3,4":"N","3,5":"O",
-      "4,1":"P","4,2":"Q","4,3":"R","4,4":"S","4,5":"T",
-      "5,1":"U","5,2":"V","5,3":"W","5,4":"X","5,5":"Y",
-      // special
-      "5,6":" ", // SPACE (use 6 taps for column as special code)
-      "5,7":".", // STOP
-      "5,8":"?",
-      "5,9":","
-    };
-
-    let audioCtx, analyser, source, dataArray;
-    let listening = false;
-    let peaks = [];
-    let lastPeak = 0;
-
-    // thresholds (in ms)
-    const minPeakGap = 100;
-    const withinGroupMax = 600;
-    const betweenLetterMin = 800;
-    const silenceTrim = 2000;
-    const amplitudeThreshold = 0.2;
-
-    const transcriptEl = document.getElementById('transcript');
-    document.getElementById('startButton').onclick = start;
-    document.getElementById('stopButton').onclick = stop;
-
-    function start() {
-      navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => {
-          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          analyser = audioCtx.createAnalyser();
-          source = audioCtx.createMediaStreamSource(stream);
-          source.connect(analyser);
-          dataArray = new Uint8Array(analyser.fftSize);
-          listening = true;
-          peaks = [];
-          transcriptEl.textContent = '';
-          document.getElementById('startButton').disabled = true;
-          document.getElementById('stopButton').disabled = false;
-          detect();
-        })
-        .catch(err => alert('Error accessing microphone: ' + err));
-    }
-
-    function stop() {
-      listening = false;
-      document.getElementById('startButton').disabled = false;
-      document.getElementById('stopButton').disabled = true;
-      decode();
-    }
-
-    function detect() {
-      if (!listening) return;
-      analyser.getByteTimeDomainData(dataArray);
-      let max = 0;
-      for (let v of dataArray) {
-        max = Math.max(max, Math.abs(v - 128) / 128);
-      }
-      const now = Date.now();
-      if (max > amplitudeThreshold && (now - lastPeak) > minPeakGap) {
-        peaks.push(now);
-        lastPeak = now;
-      }
-      requestAnimationFrame(detect);
-    }
-
-    function decode() {
-      if (!peaks.length) return;
-      // trim leading/trailing silence blocks
-      let times = peaks.filter(t => t - peaks[0] < silenceTrim);
-      // split into letters
-      const letters = [];
-      let current = [ times[0] ];
-      for (let i = 1; i < times.length; i++) {
-        const gap = times[i] - times[i - 1];
-        if (gap < withinGroupMax) {
-          current.push(times[i]);
-        } else if (gap < betweenLetterMin) {
-          // switch to next sub-group
-          current = [ times[i] ];
-        } else {
-          // end of letter
-          letters.push(current);
-          current = [ times[i] ];
+      letterGroups.forEach(group => {
+        if (group.length < 2) {
+          output += '#';
+          return;
         }
-      }
-      letters.push(current);
-
-      // group into pairs (row taps, then column taps)
-      let output = '';
-      for (let i = 0; i < letters.length; i += 2) {
-        const rowCount = letters[i] ? letters[i].length : 0;
-        const colCount = letters[i + 1] ? letters[i + 1].length : 0;
+        let maxGap = 0, splitIdx = 0;
+        for (let i = 0; i < group.length - 1; i++) {
+          const g = group[i+1] - group[i];
+          if (g > maxGap) {
+            maxGap = g; splitIdx = i;
+          }
+        }
+        const rowCount = splitIdx + 1;
+        const colCount = group.length - rowCount;
         const key = rowCount + ',' + colCount;
         output += codeMap[key] || '#';
-      }
+      });
 
       transcriptEl.textContent = output;
     }
